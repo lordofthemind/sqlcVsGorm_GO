@@ -2,7 +2,7 @@
 ├── Changelog.md
 ├── Makefile
 ├── Readme.md
-├── config.yaml
+├── Result.txt
 ├── go.mod
 ├── go.sum
 ├── internals
@@ -12,8 +12,8 @@
 │   │   └── SqlcAuthorRepository.go
 │   └── sqlc
 │       ├── migrations
-│       │   ├── 20240908120008_create_authors_table.down.sql
-│       │   └── 20240908120008_create_authors_table.up.sql
+│       │   ├── 20240908133254_authors_table.down.sql
+│       │   └── 20240908133254_authors_table.up.sql
 │       ├── queries
 │       │   └── authors.sql
 │       ├── schema
@@ -21,13 +21,16 @@
 │       └── sqlcgen
 │           ├── authors.sql.go
 │           ├── db.go
-│           └── models.go
+│           ├── models.go
+│           └── querier.go
 ├── logs
+│   ├── 20240908_165429_SqlcVsGorm.log
+│   ├── 20240908_165439_SqlcVsGorm.log
+│   └── 20240908_165450_SqlcVsGorm.log
 ├── main.go
 ├── pkgs
-├── scripts
+│   └── Logger.go
 ├── sqlc.yaml
-├── ssl
 └── tree.txt
 
-12 directories, 19 files
+10 directories, 24 files
