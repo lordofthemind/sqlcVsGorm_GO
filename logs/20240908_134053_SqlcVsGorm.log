@@ -1,3 +1,0 @@
-2024/09/08 13:40:53.929140 UUID_Extension.go:25: uuid-ossp extension enabled successfully
-2024/09/08 13:40:53.976614 main.go:140: Running benchmarks for SQLC repository...
-2024/09/08 13:40:54.005409 main.go:56: [SQLC] Failed to create author: pq: duplicate key value violates unique constraint "authors_email_key"

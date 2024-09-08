@@ -63,7 +63,7 @@ func benchmarkCreate(repo repositories.AuthorRepository, repoName string, count 
 }
 
 // benchmarkGet runs the GetAuthor benchmark.
-func benchmarkGet(repo repositories.AuthorRepository, repoName string, count int) BenchmarkResult {
+func benchmarkGet(repo repositories.AuthorRepository, repoName string) BenchmarkResult {
 	start := time.Now()
 	for id := range createdAuthorIDs { // Use IDs that were created
 		_, err := repo.GetAuthor(context.Background(), id)
@@ -85,7 +85,7 @@ func benchmarkList(repo repositories.AuthorRepository, repoName string) Benchmar
 }
 
 // benchmarkDelete runs the DeleteAuthor benchmark.
-func benchmarkDelete(repo repositories.AuthorRepository, repoName string, count int) BenchmarkResult {
+func benchmarkDelete(repo repositories.AuthorRepository, repoName string) BenchmarkResult {
 	start := time.Now()
 	for id := range createdAuthorIDs { // Use IDs that were created
 		err := repo.DeleteAuthor(context.Background(), id)
@@ -97,7 +97,7 @@ func benchmarkDelete(repo repositories.AuthorRepository, repoName string, count 
 }
 
 // benchmarkUpdate runs the UpdateAuthor benchmark.
-func benchmarkUpdate(repo repositories.AuthorRepository, repoName string, count int, rng *rand.Rand) BenchmarkResult {
+func benchmarkUpdate(repo repositories.AuthorRepository, repoName string, rng *rand.Rand) BenchmarkResult {
 	start := time.Now()
 	for id := range createdAuthorIDs { // Use IDs that were created
 		name, bio, email, dateOfBirth := createRandomAuthor(rng)
@@ -139,19 +139,19 @@ func performBenchmarks(sqlcRepo, gormRepo repositories.AuthorRepository) {
 	// Run benchmarks for SQLC repository
 	log.Println("Running benchmarks for SQLC repository...")
 	results["SQLC"]["CreateAuthor"] = benchmarkCreate(sqlcRepo, "SQLC", testCount, rng)
-	results["SQLC"]["GetAuthor"] = benchmarkGet(sqlcRepo, "SQLC", testCount)
+	results["SQLC"]["GetAuthor"] = benchmarkGet(sqlcRepo, "SQLC")
 	results["SQLC"]["ListAuthors"] = benchmarkList(sqlcRepo, "SQLC")
-	results["SQLC"]["DeleteAuthor"] = benchmarkDelete(sqlcRepo, "SQLC", testCount)
-	results["SQLC"]["UpdateAuthor"] = benchmarkUpdate(sqlcRepo, "SQLC", testCount, rng)
+	results["SQLC"]["DeleteAuthor"] = benchmarkDelete(sqlcRepo, "SQLC")
+	results["SQLC"]["UpdateAuthor"] = benchmarkUpdate(sqlcRepo, "SQLC", rng)
 	results["SQLC"]["GetAuthorsByBirthdateRange"] = benchmarkGetAuthorsByBirthdateRange(sqlcRepo, "SQLC", startDate, endDate)
 
 	// Run benchmarks for GORM repository
 	log.Println("Running benchmarks for GORM repository...")
 	results["GORM"]["CreateAuthor"] = benchmarkCreate(gormRepo, "GORM", testCount, rng)
-	results["GORM"]["GetAuthor"] = benchmarkGet(gormRepo, "GORM", testCount)
+	results["GORM"]["GetAuthor"] = benchmarkGet(gormRepo, "GORM")
 	results["GORM"]["ListAuthors"] = benchmarkList(gormRepo, "GORM")
-	results["GORM"]["DeleteAuthor"] = benchmarkDelete(gormRepo, "GORM", testCount)
-	results["GORM"]["UpdateAuthor"] = benchmarkUpdate(gormRepo, "GORM", testCount, rng)
+	results["GORM"]["DeleteAuthor"] = benchmarkDelete(gormRepo, "GORM")
+	results["GORM"]["UpdateAuthor"] = benchmarkUpdate(gormRepo, "GORM", rng)
 	results["GORM"]["GetAuthorsByBirthdateRange"] = benchmarkGetAuthorsByBirthdateRange(gormRepo, "GORM", startDate, endDate)
 
 	// Log results side by side and determine the winner
