@@ -196,27 +196,32 @@ func main() {
 	}
 	defer logFile.Close()
 
-	// Set up database connections for SQLC and GORM
-	// SQLC connection
+	// Set up SQLC database connection
 	sqlDB, err := sql.Open("postgres", "postgresql://postgres:postgresSqlcVsGormSecret@localhost:5434/SqlcVsGorm_SQLC?sslmode=disable")
 	if err != nil {
 		log.Fatalf("Failed to connect to SQLC DB: %v", err)
 	}
 	defer sqlDB.Close()
 
-	sqlcRepo := repositories.NewSQLCRepository(sqlDB)
+	// Create a new instance of *sqlcgen.Queries
+	queries := sqlcgen.New(sqlDB)
 
-	// GORM connection
+	// Create the SQLC repository using the *sqlcgen.Queries instance
+	sqlcRepo := repositories.NewSQLCRepository(queries)
+
+	// Set up GORM database connection
 	gormDB, err := gorm.Open(postgres.Open("postgresql://postgres:postgresSqlcVsGormSecret@localhost:5434/SqlcVsGorm_GORM"), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Failed to connect to GORM DB: %v", err)
 	}
+
 	// Auto migrate GORM schema
 	err = gormDB.AutoMigrate(&sqlcgen.Author{})
 	if err != nil {
 		log.Fatalf("Failed to migrate database schema: %v", err)
 	}
 
+	// Create the GORM repository
 	gormRepo := repositories.NewGORMRepository(gormDB)
 
 	// Perform benchmarks using the repositories
