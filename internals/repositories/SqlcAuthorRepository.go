@@ -22,11 +22,12 @@ func (r *SqlcAuthorRepository) CreateAuthor(ctx context.Context, name string, bi
 		Name: name,
 		Bio:  bio,
 	}
-	result, err := r.queries.CreateAuthor(ctx, params)
+	// Use the generated CreateAuthor method to get the ID
+	authorID, err := r.queries.CreateAuthor(ctx, params)
 	if err != nil {
 		return 0, err
 	}
-	return result.LastInsertId() // Return the inserted ID
+	return authorID, nil // Return the inserted ID
 }
 
 func (r *SqlcAuthorRepository) GetAuthor(ctx context.Context, id int64) (sqlcgen.Author, error) {

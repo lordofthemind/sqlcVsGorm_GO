@@ -6,7 +6,7 @@ WHERE id = $1;  -- Use $1 for PostgreSQL parameter placeholders
 SELECT id, name, bio FROM authors
 ORDER BY name;
 
--- name: CreateAuthor :execresult
+-- name: CreateAuthor :one
 INSERT INTO authors (name, bio)
 VALUES ($1, $2)
 RETURNING id;  -- Return the newly created ID for the inserted author

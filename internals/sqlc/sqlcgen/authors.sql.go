@@ -10,7 +10,7 @@ import (
 	"database/sql"
 )
 
-const createAuthor = `-- name: CreateAuthor :execresult
+const createAuthor = `-- name: CreateAuthor :one
 INSERT INTO authors (name, bio)
 VALUES ($1, $2)
 RETURNING id
@@ -21,8 +21,11 @@ type CreateAuthorParams struct {
 	Bio  sql.NullString
 }
 
-func (q *Queries) CreateAuthor(ctx context.Context, arg CreateAuthorParams) (sql.Result, error) {
-	return q.db.ExecContext(ctx, createAuthor, arg.Name, arg.Bio)
+func (q *Queries) CreateAuthor(ctx context.Context, arg CreateAuthorParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, createAuthor, arg.Name, arg.Bio)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }
 
 const deleteAuthor = `-- name: DeleteAuthor :exec
