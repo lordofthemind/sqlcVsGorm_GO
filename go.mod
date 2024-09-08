@@ -3,7 +3,6 @@ module github.com/lordofthemind/sqlcVsGorm_GO
 go 1.22.3
 
 require (
-	github.com/google/uuid v1.6.0
 	github.com/lib/pq v1.10.9
 	golang.org/x/exp v0.0.0-20240904232852-e7e105dedf7e
 	gorm.io/driver/postgres v1.5.9

@@ -7,7 +7,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/google/uuid"
 	_ "github.com/lib/pq"
 	"github.com/lordofthemind/sqlcVsGorm_GO/internals/repositories"
 	"github.com/lordofthemind/sqlcVsGorm_GO/internals/sqlc/sqlcgen"
@@ -24,11 +23,24 @@ type BenchmarkResult struct {
 	Duration   time.Duration
 }
 
+// Create a map to keep track of used emails
+var usedEmails = map[string]bool{}
+
 // createRandomAuthor generates a random author for testing.
 func createRandomAuthor(rng *rand.Rand) (string, sql.NullString, string, sql.NullTime) {
 	name := fmt.Sprintf("Author%d", rng.Intn(1000))
 	bio := sql.NullString{String: fmt.Sprintf("Bio%d", rng.Intn(1000)), Valid: true}
-	email := fmt.Sprintf("author%d@example.com", rng.Intn(1000))
+
+	// Generate a unique email
+	var email string
+	for {
+		email = fmt.Sprintf("author%d@example.com", rng.Intn(1000))
+		if !usedEmails[email] {
+			usedEmails[email] = true
+			break
+		}
+	}
+
 	dateOfBirth := sql.NullTime{Time: time.Now().AddDate(-rng.Intn(60), 0, 0), Valid: true}
 	return name, bio, email, dateOfBirth
 }
@@ -50,7 +62,7 @@ func benchmarkCreate(repo repositories.AuthorRepository, repoName string, count 
 func benchmarkGet(repo repositories.AuthorRepository, repoName string, count int) BenchmarkResult {
 	start := time.Now()
 	for i := 0; i < count; i++ {
-		id := uuid.New() // Generating a new UUID for testing purposes
+		id := int32(rand.Intn(100)) // Using random int32 ID for testing purposes
 		_, err := repo.GetAuthor(context.Background(), id)
 		if err != nil && err != sql.ErrNoRows {
 			log.Fatalf("[%s] Failed to get author: %v", repoName, err)
@@ -73,7 +85,7 @@ func benchmarkList(repo repositories.AuthorRepository, repoName string) Benchmar
 func benchmarkDelete(repo repositories.AuthorRepository, repoName string, count int) BenchmarkResult {
 	start := time.Now()
 	for i := 0; i < count; i++ {
-		id := uuid.New() // Generating a new UUID for testing purposes
+		id := int32(rand.Intn(100)) // Using random int32 ID for testing purposes
 		err := repo.DeleteAuthor(context.Background(), id)
 		if err != nil && err != sql.ErrNoRows {
 			log.Fatalf("[%s] Failed to delete author: %v", repoName, err)
@@ -86,10 +98,10 @@ func benchmarkDelete(repo repositories.AuthorRepository, repoName string, count 
 func benchmarkUpdate(repo repositories.AuthorRepository, repoName string, count int, rng *rand.Rand) BenchmarkResult {
 	start := time.Now()
 	for i := 0; i < count; i++ {
-		id := uuid.New() // Generating a new UUID for testing purposes
+		id := int32(rand.Intn(100)) // Using random int32 ID for testing purposes
 		name, bio, email, dateOfBirth := createRandomAuthor(rng)
 		err := repo.UpdateAuthor(context.Background(), id, name, bio, email, dateOfBirth)
-		if err != nil {
+		if err != nil && err != sql.ErrNoRows {
 			log.Fatalf("[%s] Failed to update author: %v", repoName, err)
 		}
 	}
@@ -119,14 +131,17 @@ func performBenchmarks(sqlcRepo, gormRepo repositories.AuthorRepository) {
 		"GORM": {},
 	}
 
+	// Define date range for GetAuthorsByBirthdateRange
+	startDate := time.Now().AddDate(-5, 0, 0) // 5 years ago
+	endDate := time.Now()
+
 	// Run benchmarks for SQLC repository
 	log.Println("Running benchmarks for SQLC repository...")
 	results["SQLC"]["CreateAuthor"] = benchmarkCreate(sqlcRepo, "SQLC", testCount, rng)
 	results["SQLC"]["GetAuthor"] = benchmarkGet(sqlcRepo, "SQLC", testCount)
 	results["SQLC"]["ListAuthors"] = benchmarkList(sqlcRepo, "SQLC")
 	results["SQLC"]["DeleteAuthor"] = benchmarkDelete(sqlcRepo, "SQLC", testCount)
-	startDate := time.Now().AddDate(-5, 0, 0) // 5 years ago
-	endDate := time.Now()
+	results["SQLC"]["UpdateAuthor"] = benchmarkUpdate(sqlcRepo, "SQLC", testCount, rng)
 	results["SQLC"]["GetAuthorsByBirthdateRange"] = benchmarkGetAuthorsByBirthdateRange(sqlcRepo, "SQLC", startDate, endDate)
 
 	// Run benchmarks for GORM repository
@@ -135,6 +150,7 @@ func performBenchmarks(sqlcRepo, gormRepo repositories.AuthorRepository) {
 	results["GORM"]["GetAuthor"] = benchmarkGet(gormRepo, "GORM", testCount)
 	results["GORM"]["ListAuthors"] = benchmarkList(gormRepo, "GORM")
 	results["GORM"]["DeleteAuthor"] = benchmarkDelete(gormRepo, "GORM", testCount)
+	results["GORM"]["UpdateAuthor"] = benchmarkUpdate(gormRepo, "GORM", testCount, rng)
 	results["GORM"]["GetAuthorsByBirthdateRange"] = benchmarkGetAuthorsByBirthdateRange(gormRepo, "GORM", startDate, endDate)
 
 	// Log results side by side and determine the winner
@@ -174,7 +190,7 @@ func performBenchmarks(sqlcRepo, gormRepo repositories.AuthorRepository) {
 
 func main() {
 	// Set up logging
-	logFile, err := pkgs.SetUpLogger("server.log")
+	logFile, err := pkgs.SetUpLogger("SqlcVsGorm.log")
 	if err != nil {
 		log.Fatalf("Failed to set up logger: %v", err)
 	}
@@ -188,21 +204,20 @@ func main() {
 	}
 	defer sqlDB.Close()
 
-	sqlcRepo := repositories.NewSqlcAuthorRepository(sqlDB)
+	sqlcRepo := repositories.NewSQLCRepository(sqlDB)
 
 	// GORM connection
 	gormDB, err := gorm.Open(postgres.Open("postgresql://postgres:postgresSqlcVsGormSecret@localhost:5434/SqlcVsGorm_GORM"), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Failed to connect to GORM DB: %v", err)
 	}
-
 	// Auto migrate GORM schema
 	err = gormDB.AutoMigrate(&sqlcgen.Author{})
 	if err != nil {
 		log.Fatalf("Failed to migrate database schema: %v", err)
 	}
 
-	gormRepo := repositories.NewGormAuthorRepository(gormDB)
+	gormRepo := repositories.NewGORMRepository(gormDB)
 
 	// Perform benchmarks using the repositories
 	performBenchmarks(sqlcRepo, gormRepo)

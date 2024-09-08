@@ -7,6 +7,7 @@ package sqlcgen
 import (
 	"context"
 	"database/sql"
+	"fmt"
 )
 
 type DBTX interface {
@@ -20,12 +21,118 @@ func New(db DBTX) *Queries {
 	return &Queries{db: db}
 }
 
+func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
+	q := Queries{db: db}
+	var err error
+	if q.createAuthorStmt, err = db.PrepareContext(ctx, CreateAuthor); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateAuthor: %w", err)
+	}
+	if q.deleteAuthorStmt, err = db.PrepareContext(ctx, DeleteAuthor); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteAuthor: %w", err)
+	}
+	if q.getAuthorStmt, err = db.PrepareContext(ctx, GetAuthor); err != nil {
+		return nil, fmt.Errorf("error preparing query GetAuthor: %w", err)
+	}
+	if q.getAuthorsByBirthdateRangeStmt, err = db.PrepareContext(ctx, GetAuthorsByBirthdateRange); err != nil {
+		return nil, fmt.Errorf("error preparing query GetAuthorsByBirthdateRange: %w", err)
+	}
+	if q.listAuthorsStmt, err = db.PrepareContext(ctx, ListAuthors); err != nil {
+		return nil, fmt.Errorf("error preparing query ListAuthors: %w", err)
+	}
+	if q.updateAuthorStmt, err = db.PrepareContext(ctx, UpdateAuthor); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateAuthor: %w", err)
+	}
+	return &q, nil
+}
+
+func (q *Queries) Close() error {
+	var err error
+	if q.createAuthorStmt != nil {
+		if cerr := q.createAuthorStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createAuthorStmt: %w", cerr)
+		}
+	}
+	if q.deleteAuthorStmt != nil {
+		if cerr := q.deleteAuthorStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteAuthorStmt: %w", cerr)
+		}
+	}
+	if q.getAuthorStmt != nil {
+		if cerr := q.getAuthorStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getAuthorStmt: %w", cerr)
+		}
+	}
+	if q.getAuthorsByBirthdateRangeStmt != nil {
+		if cerr := q.getAuthorsByBirthdateRangeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getAuthorsByBirthdateRangeStmt: %w", cerr)
+		}
+	}
+	if q.listAuthorsStmt != nil {
+		if cerr := q.listAuthorsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing listAuthorsStmt: %w", cerr)
+		}
+	}
+	if q.updateAuthorStmt != nil {
+		if cerr := q.updateAuthorStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateAuthorStmt: %w", cerr)
+		}
+	}
+	return err
+}
+
+func (q *Queries) exec(ctx context.Context, stmt *sql.Stmt, query string, args ...interface{}) (sql.Result, error) {
+	switch {
+	case stmt != nil && q.tx != nil:
+		return q.tx.StmtContext(ctx, stmt).ExecContext(ctx, args...)
+	case stmt != nil:
+		return stmt.ExecContext(ctx, args...)
+	default:
+		return q.db.ExecContext(ctx, query, args...)
+	}
+}
+
+func (q *Queries) query(ctx context.Context, stmt *sql.Stmt, query string, args ...interface{}) (*sql.Rows, error) {
+	switch {
+	case stmt != nil && q.tx != nil:
+		return q.tx.StmtContext(ctx, stmt).QueryContext(ctx, args...)
+	case stmt != nil:
+		return stmt.QueryContext(ctx, args...)
+	default:
+		return q.db.QueryContext(ctx, query, args...)
+	}
+}
+
+func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, args ...interface{}) *sql.Row {
+	switch {
+	case stmt != nil && q.tx != nil:
+		return q.tx.StmtContext(ctx, stmt).QueryRowContext(ctx, args...)
+	case stmt != nil:
+		return stmt.QueryRowContext(ctx, args...)
+	default:
+		return q.db.QueryRowContext(ctx, query, args...)
+	}
+}
+
 type Queries struct {
-	db DBTX
+	db                             DBTX
+	tx                             *sql.Tx
+	createAuthorStmt               *sql.Stmt
+	deleteAuthorStmt               *sql.Stmt
+	getAuthorStmt                  *sql.Stmt
+	getAuthorsByBirthdateRangeStmt *sql.Stmt
+	listAuthorsStmt                *sql.Stmt
+	updateAuthorStmt               *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db: tx,
+		db:                             tx,
+		tx:                             tx,
+		createAuthorStmt:               q.createAuthorStmt,
+		deleteAuthorStmt:               q.deleteAuthorStmt,
+		getAuthorStmt:                  q.getAuthorStmt,
+		getAuthorsByBirthdateRangeStmt: q.getAuthorsByBirthdateRangeStmt,
+		listAuthorsStmt:                q.listAuthorsStmt,
+		updateAuthorStmt:               q.updateAuthorStmt,
 	}
 }

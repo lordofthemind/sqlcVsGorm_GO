@@ -8,52 +8,50 @@ package sqlcgen
 import (
 	"context"
 	"database/sql"
-
-	"github.com/google/uuid"
 )
 
-const createAuthor = `-- name: CreateAuthor :one
+const CreateAuthor = `-- name: CreateAuthor :one
 INSERT INTO authors (name, bio, email, date_of_birth)
 VALUES ($1, $2, $3, $4)
 RETURNING id
 `
 
 type CreateAuthorParams struct {
-	Name        string
-	Bio         sql.NullString
-	Email       string
-	DateOfBirth sql.NullTime
+	Name        string         `json:"name"`
+	Bio         sql.NullString `json:"bio"`
+	Email       string         `json:"email"`
+	DateOfBirth sql.NullTime   `json:"date_of_birth"`
 }
 
-func (q *Queries) CreateAuthor(ctx context.Context, arg CreateAuthorParams) (uuid.UUID, error) {
-	row := q.db.QueryRowContext(ctx, createAuthor,
+func (q *Queries) CreateAuthor(ctx context.Context, arg CreateAuthorParams) (int32, error) {
+	row := q.queryRow(ctx, q.createAuthorStmt, CreateAuthor,
 		arg.Name,
 		arg.Bio,
 		arg.Email,
 		arg.DateOfBirth,
 	)
-	var id uuid.UUID
+	var id int32
 	err := row.Scan(&id)
 	return id, err
 }
 
-const deleteAuthor = `-- name: DeleteAuthor :exec
+const DeleteAuthor = `-- name: DeleteAuthor :exec
 DELETE FROM authors
 WHERE id = $1
 `
 
-func (q *Queries) DeleteAuthor(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.ExecContext(ctx, deleteAuthor, id)
+func (q *Queries) DeleteAuthor(ctx context.Context, id int32) error {
+	_, err := q.exec(ctx, q.deleteAuthorStmt, DeleteAuthor, id)
 	return err
 }
 
-const getAuthor = `-- name: GetAuthor :one
+const GetAuthor = `-- name: GetAuthor :one
 SELECT id, name, bio, email, date_of_birth FROM authors
 WHERE id = $1
 `
 
-func (q *Queries) GetAuthor(ctx context.Context, id uuid.UUID) (Author, error) {
-	row := q.db.QueryRowContext(ctx, getAuthor, id)
+func (q *Queries) GetAuthor(ctx context.Context, id int32) (Author, error) {
+	row := q.queryRow(ctx, q.getAuthorStmt, GetAuthor, id)
 	var i Author
 	err := row.Scan(
 		&i.ID,
@@ -65,24 +63,24 @@ func (q *Queries) GetAuthor(ctx context.Context, id uuid.UUID) (Author, error) {
 	return i, err
 }
 
-const getAuthorsByBirthdateRange = `-- name: GetAuthorsByBirthdateRange :many
+const GetAuthorsByBirthdateRange = `-- name: GetAuthorsByBirthdateRange :many
 SELECT id, name, bio, email, date_of_birth FROM authors
 WHERE date_of_birth BETWEEN $1 AND $2
 ORDER BY date_of_birth
 `
 
 type GetAuthorsByBirthdateRangeParams struct {
-	DateOfBirth   sql.NullTime
-	DateOfBirth_2 sql.NullTime
+	DateOfBirth   sql.NullTime `json:"date_of_birth"`
+	DateOfBirth_2 sql.NullTime `json:"date_of_birth_2"`
 }
 
 func (q *Queries) GetAuthorsByBirthdateRange(ctx context.Context, arg GetAuthorsByBirthdateRangeParams) ([]Author, error) {
-	rows, err := q.db.QueryContext(ctx, getAuthorsByBirthdateRange, arg.DateOfBirth, arg.DateOfBirth_2)
+	rows, err := q.query(ctx, q.getAuthorsByBirthdateRangeStmt, GetAuthorsByBirthdateRange, arg.DateOfBirth, arg.DateOfBirth_2)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Author
+	items := []Author{}
 	for rows.Next() {
 		var i Author
 		if err := rows.Scan(
@@ -105,18 +103,18 @@ func (q *Queries) GetAuthorsByBirthdateRange(ctx context.Context, arg GetAuthors
 	return items, nil
 }
 
-const listAuthors = `-- name: ListAuthors :many
+const ListAuthors = `-- name: ListAuthors :many
 SELECT id, name, bio, email, date_of_birth FROM authors
 ORDER BY name
 `
 
 func (q *Queries) ListAuthors(ctx context.Context) ([]Author, error) {
-	rows, err := q.db.QueryContext(ctx, listAuthors)
+	rows, err := q.query(ctx, q.listAuthorsStmt, ListAuthors)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Author
+	items := []Author{}
 	for rows.Next() {
 		var i Author
 		if err := rows.Scan(
@@ -139,7 +137,7 @@ func (q *Queries) ListAuthors(ctx context.Context) ([]Author, error) {
 	return items, nil
 }
 
-const updateAuthor = `-- name: UpdateAuthor :exec
+const UpdateAuthor = `-- name: UpdateAuthor :exec
 UPDATE authors
 SET name = $2,
     bio = $3,
@@ -149,15 +147,15 @@ WHERE id = $1
 `
 
 type UpdateAuthorParams struct {
-	ID          uuid.UUID
-	Name        string
-	Bio         sql.NullString
-	Email       string
-	DateOfBirth sql.NullTime
+	ID          int32          `json:"id"`
+	Name        string         `json:"name"`
+	Bio         sql.NullString `json:"bio"`
+	Email       string         `json:"email"`
+	DateOfBirth sql.NullTime   `json:"date_of_birth"`
 }
 
 func (q *Queries) UpdateAuthor(ctx context.Context, arg UpdateAuthorParams) error {
-	_, err := q.db.ExecContext(ctx, updateAuthor,
+	_, err := q.exec(ctx, q.updateAuthorStmt, UpdateAuthor,
 		arg.ID,
 		arg.Name,
 		arg.Bio,

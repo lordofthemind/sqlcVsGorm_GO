@@ -5,21 +5,18 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/lordofthemind/sqlcVsGorm_GO/internals/sqlc/sqlcgen"
 )
 
-type SqlcAuthorRepository struct {
+type SQLCRepository struct {
 	queries *sqlcgen.Queries
 }
 
-func NewSqlcAuthorRepository(db *sql.DB) *SqlcAuthorRepository {
-	return &SqlcAuthorRepository{
-		queries: sqlcgen.New(db),
-	}
+func NewSQLCRepository(queries *sqlcgen.Queries) *SQLCRepository {
+	return &SQLCRepository{queries: queries}
 }
 
-func (r *SqlcAuthorRepository) CreateAuthor(ctx context.Context, name string, bio sql.NullString, email string, dateOfBirth sql.NullTime) (uuid.UUID, error) {
+func (r *SQLCRepository) CreateAuthor(ctx context.Context, name string, bio sql.NullString, email string, dateOfBirth sql.NullTime) (int32, error) {
 	params := sqlcgen.CreateAuthorParams{
 		Name:        name,
 		Bio:         bio,
@@ -29,19 +26,19 @@ func (r *SqlcAuthorRepository) CreateAuthor(ctx context.Context, name string, bi
 	return r.queries.CreateAuthor(ctx, params)
 }
 
-func (r *SqlcAuthorRepository) GetAuthor(ctx context.Context, id uuid.UUID) (sqlcgen.Author, error) {
+func (r *SQLCRepository) GetAuthor(ctx context.Context, id int32) (sqlcgen.Author, error) {
 	return r.queries.GetAuthor(ctx, id)
 }
 
-func (r *SqlcAuthorRepository) ListAuthors(ctx context.Context) ([]sqlcgen.Author, error) {
+func (r *SQLCRepository) ListAuthors(ctx context.Context) ([]sqlcgen.Author, error) {
 	return r.queries.ListAuthors(ctx)
 }
 
-func (r *SqlcAuthorRepository) DeleteAuthor(ctx context.Context, id uuid.UUID) error {
+func (r *SQLCRepository) DeleteAuthor(ctx context.Context, id int32) error {
 	return r.queries.DeleteAuthor(ctx, id)
 }
 
-func (r *SqlcAuthorRepository) UpdateAuthor(ctx context.Context, id uuid.UUID, name string, bio sql.NullString, email string, dateOfBirth sql.NullTime) error {
+func (r *SQLCRepository) UpdateAuthor(ctx context.Context, id int32, name string, bio sql.NullString, email string, dateOfBirth sql.NullTime) error {
 	params := sqlcgen.UpdateAuthorParams{
 		ID:          id,
 		Name:        name,
@@ -52,7 +49,7 @@ func (r *SqlcAuthorRepository) UpdateAuthor(ctx context.Context, id uuid.UUID, n
 	return r.queries.UpdateAuthor(ctx, params)
 }
 
-func (r *SqlcAuthorRepository) GetAuthorsByBirthdateRange(ctx context.Context, startDate, endDate time.Time) ([]sqlcgen.Author, error) {
+func (r *SQLCRepository) GetAuthorsByBirthdateRange(ctx context.Context, startDate, endDate time.Time) ([]sqlcgen.Author, error) {
 	params := sqlcgen.GetAuthorsByBirthdateRangeParams{
 		DateOfBirth:   sql.NullTime{Time: startDate, Valid: true},
 		DateOfBirth_2: sql.NullTime{Time: endDate, Valid: true},
