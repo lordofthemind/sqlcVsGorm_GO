@@ -8,59 +8,76 @@ package sqlcgen
 import (
 	"context"
 	"database/sql"
+
+	"github.com/google/uuid"
 )
 
 const createAuthor = `-- name: CreateAuthor :one
-INSERT INTO authors (name, bio)
-VALUES ($1, $2)
+INSERT INTO authors (name, bio, email, date_of_birth)
+VALUES ($1, $2, $3, $4)
 RETURNING id
 `
 
 type CreateAuthorParams struct {
-	Name string
-	Bio  sql.NullString
+	Name        string
+	Bio         sql.NullString
+	Email       string
+	DateOfBirth sql.NullTime
 }
 
-func (q *Queries) CreateAuthor(ctx context.Context, arg CreateAuthorParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, createAuthor, arg.Name, arg.Bio)
-	var id int64
+func (q *Queries) CreateAuthor(ctx context.Context, arg CreateAuthorParams) (uuid.UUID, error) {
+	row := q.db.QueryRowContext(ctx, createAuthor,
+		arg.Name,
+		arg.Bio,
+		arg.Email,
+		arg.DateOfBirth,
+	)
+	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }
 
 const deleteAuthor = `-- name: DeleteAuthor :exec
-
 DELETE FROM authors
 WHERE id = $1
 `
 
-// Return the newly created ID for the inserted author
-func (q *Queries) DeleteAuthor(ctx context.Context, id int64) error {
+func (q *Queries) DeleteAuthor(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.ExecContext(ctx, deleteAuthor, id)
 	return err
 }
 
 const getAuthor = `-- name: GetAuthor :one
-SELECT id, name, bio FROM authors
+SELECT id, name, bio, email, date_of_birth FROM authors
 WHERE id = $1
 `
 
-func (q *Queries) GetAuthor(ctx context.Context, id int64) (Author, error) {
+func (q *Queries) GetAuthor(ctx context.Context, id uuid.UUID) (Author, error) {
 	row := q.db.QueryRowContext(ctx, getAuthor, id)
 	var i Author
-	err := row.Scan(&i.ID, &i.Name, &i.Bio)
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Bio,
+		&i.Email,
+		&i.DateOfBirth,
+	)
 	return i, err
 }
 
-const listAuthors = `-- name: ListAuthors :many
-
-SELECT id, name, bio FROM authors
-ORDER BY name
+const getAuthorsByBirthdateRange = `-- name: GetAuthorsByBirthdateRange :many
+SELECT id, name, bio, email, date_of_birth FROM authors
+WHERE date_of_birth BETWEEN $1 AND $2
+ORDER BY date_of_birth
 `
 
-// Use $1 for PostgreSQL parameter placeholders
-func (q *Queries) ListAuthors(ctx context.Context) ([]Author, error) {
-	rows, err := q.db.QueryContext(ctx, listAuthors)
+type GetAuthorsByBirthdateRangeParams struct {
+	DateOfBirth   sql.NullTime
+	DateOfBirth_2 sql.NullTime
+}
+
+func (q *Queries) GetAuthorsByBirthdateRange(ctx context.Context, arg GetAuthorsByBirthdateRangeParams) ([]Author, error) {
+	rows, err := q.db.QueryContext(ctx, getAuthorsByBirthdateRange, arg.DateOfBirth, arg.DateOfBirth_2)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +85,13 @@ func (q *Queries) ListAuthors(ctx context.Context) ([]Author, error) {
 	var items []Author
 	for rows.Next() {
 		var i Author
-		if err := rows.Scan(&i.ID, &i.Name, &i.Bio); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Bio,
+			&i.Email,
+			&i.DateOfBirth,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -80,4 +103,66 @@ func (q *Queries) ListAuthors(ctx context.Context) ([]Author, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const listAuthors = `-- name: ListAuthors :many
+SELECT id, name, bio, email, date_of_birth FROM authors
+ORDER BY name
+`
+
+func (q *Queries) ListAuthors(ctx context.Context) ([]Author, error) {
+	rows, err := q.db.QueryContext(ctx, listAuthors)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Author
+	for rows.Next() {
+		var i Author
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Bio,
+			&i.Email,
+			&i.DateOfBirth,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateAuthor = `-- name: UpdateAuthor :exec
+UPDATE authors
+SET name = $2,
+    bio = $3,
+    email = $4,
+    date_of_birth = $5
+WHERE id = $1
+`
+
+type UpdateAuthorParams struct {
+	ID          uuid.UUID
+	Name        string
+	Bio         sql.NullString
+	Email       string
+	DateOfBirth sql.NullTime
+}
+
+func (q *Queries) UpdateAuthor(ctx context.Context, arg UpdateAuthorParams) error {
+	_, err := q.db.ExecContext(ctx, updateAuthor,
+		arg.ID,
+		arg.Name,
+		arg.Bio,
+		arg.Email,
+		arg.DateOfBirth,
+	)
+	return err
 }

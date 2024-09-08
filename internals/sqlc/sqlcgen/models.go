@@ -6,10 +6,14 @@ package sqlcgen
 
 import (
 	"database/sql"
+
+	"github.com/google/uuid"
 )
 
 type Author struct {
-	ID   int64
-	Name string
-	Bio  sql.NullString
+	ID          uuid.UUID
+	Name        string
+	Bio         sql.NullString
+	Email       string
+	DateOfBirth sql.NullTime
 }
