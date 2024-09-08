@@ -10,6 +10,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/lordofthemind/sqlcVsGorm_GO/internals/repositories"
 	"github.com/lordofthemind/sqlcVsGorm_GO/internals/sqlc/sqlcgen"
+	"github.com/lordofthemind/sqlcVsGorm_GO/pkgs"
 	"golang.org/x/exp/rand"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -103,21 +104,48 @@ func performBenchmarks(sqlcRepo, gormRepo repositories.AuthorRepository) {
 	results["GORM"]["ListAuthors"] = benchmarkList(gormRepo, "GORM")
 	results["GORM"]["DeleteAuthor"] = benchmarkDelete(gormRepo, "GORM", testCount)
 
-	// Log results side by side
+	// Log results side by side and determine the winner
+	var sqlcTotal, gormTotal time.Duration
 	for operation := range results["SQLC"] {
 		sqlcDuration := results["SQLC"][operation].Duration
 		gormDuration := results["GORM"][operation].Duration
 		difference := gormDuration - sqlcDuration
 
+		sqlcTotal += sqlcDuration
+		gormTotal += gormDuration
+
+		// Determine winner for each operation
+		winner := "SQLC"
+		if gormDuration < sqlcDuration {
+			winner = "GORM"
+		}
+
 		log.Printf("Operation: %s\n", operation)
 		log.Printf("  SQLC Duration: %v\n", sqlcDuration)
 		log.Printf("  GORM Duration: %v\n", gormDuration)
 		log.Printf("  Difference    : %v\n", difference)
+		log.Printf("  Winner        : %s\n", winner)
 		log.Println()
+	}
+
+	// Summarize overall results
+	log.Println("Summary:")
+	log.Printf("  Total SQLC Time: %v\n", sqlcTotal)
+	log.Printf("  Total GORM Time: %v\n", gormTotal)
+	if sqlcTotal < gormTotal {
+		log.Println("Overall Winner: SQLC")
+	} else {
+		log.Println("Overall Winner: GORM")
 	}
 }
 
 func main() {
+	// Set up logging
+	logFile, err := pkgs.SetUpLogger("server.log")
+	if err != nil {
+		log.Fatalf("Failed to set up logger: %v", err)
+	}
+	defer logFile.Close()
 	// Set up database connections for SQLC and GORM
 	// SQLC connection
 	sqlDB, err := sql.Open("postgres", "postgresql://postgres:postgresSqlcVsGormSecret@localhost:5434/SqlcVsGorm_SQLC?sslmode=disable")
