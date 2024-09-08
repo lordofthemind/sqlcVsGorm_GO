@@ -1,0 +1,10 @@
+version: "2"
+
+sql:
+  - engine: "postgresql"                  # Specify the database engine
+    schema: "internals/sqlc/schema/schema.sql" # Path to your schema file(s)
+    queries: "internals/sqlc/queries"   # Path to your SQL query files
+    gen:
+      go:
+        package: "sqlcgen"                # Go package name for generated code
+        out: "internals/sqlc/sqlcgen"   # Output directory for generated Go code
