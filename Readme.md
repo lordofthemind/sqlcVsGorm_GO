@@ -1,7 +1,7 @@
 
 # sqlcVsGorm
 
-This project, **sqlcVsGorm**, compares the performance of two popular Go database libraries, **SQLC** and **GORM**, when working with PostgreSQL. The aim is to provide insights into how each performs with various types of database queries, including simple CRUD operations as well as more complex queries.
+**sqlcVsGorm** is a project aimed at comparing the performance of two popular Go database libraries, **SQLC** and **GORM**, when interacting with PostgreSQL. The project benchmarks various database operations, such as CRUD operations and complex queries, to provide insights into the performance characteristics of each library.
 
 ## Table of Contents
 
@@ -17,13 +17,14 @@ This project, **sqlcVsGorm**, compares the performance of two popular Go databas
 
 ## Overview
 
-The goal of this project is to benchmark and compare the performance of SQLC and GORM, two distinct ways to interact with PostgreSQL in Go applications. SQLC generates type-safe Go code from raw SQL queries, while GORM is a powerful ORM (Object-Relational Mapping) library.
+This project benchmarks **SQLC** and **GORM** by implementing the same set of database operations—such as inserting, updating, retrieving, and deleting records—using both libraries. The performance results help determine which library is more efficient under various scenarios.
 
 In this project, the same set of database operations, such as inserting records, reading data, updating, and deleting, is implemented using both SQLC and GORM. By switching between the two implementations in `main.go`, we can compare their performance in various scenarios.
 
-Here is the updated project structure with the relevant sections included in markdown format:
+## Project Structure
 
-### Project Structure:
+The project is organized as follows:
+
 ```bash
 .
 ├── Changelog.md
@@ -61,7 +62,7 @@ Here is the updated project structure with the relevant sections included in mar
 └── tree.txt
 ```
 
-### Explanation of Key Components:
+### Key Components
 
 1. **Top-Level Files:**
    - **Changelog.md:** Keeps a history of changes, updates, and versioning for the project.
@@ -148,8 +149,6 @@ This comparison is useful to understand:
 
 ## Installation
 
-To set up the project, follow these steps:
-
 1. **Clone the repository**:
     ```bash
     git clone https://github.com/lordofthemind/sqlcVsGorm_GO.git
@@ -157,17 +156,17 @@ To set up the project, follow these steps:
     ```
 
 2. **Install dependencies**:
-    - Install the `sqlc` tool:
+    - **SQLC**:
       ```bash
       go install github.com/kyleconroy/sqlc/cmd/sqlc@latest
       ```
-    - Install GORM:
+    - **GORM**:
       ```bash
       go get -u gorm.io/gorm
       go get -u gorm.io/driver/postgres
       ```
 
-3. **Set up PostgreSQL database**:
+3. **Set up PostgreSQL**: 
    Create a PostgreSQL database and update the connection settings in the project configuration.
 
 4. **Generate SQLC code**:
@@ -176,11 +175,11 @@ To set up the project, follow these steps:
     sqlc generate
     ```
 
-### How It Works
+## How It Works
 
 This project compares the performance of two ORM/SQL approaches in Go: **SQLC** and **GORM**, using the same set of operations. The goal is to benchmark how these libraries perform when executing database queries, such as inserting, updating, retrieving, and deleting records.
 
-#### Key Operations:
+### Key Operations:
 
 - **Insert records** (Create)
 - **Fetch records** (Get)
@@ -189,7 +188,7 @@ This project compares the performance of two ORM/SQL approaches in Go: **SQLC** 
 - **Delete records** (Delete)
 - **Fetch records within a range** (GetAuthorsByBirthdateRange)
 
-#### Switching Between SQLC and GORM
+### Switching Between SQLC and GORM
 
 The code uses an interface (`AuthorRepository`) that both SQLC and GORM implementations adhere to. This allows switching between the two libraries without changing the underlying business logic:
 
@@ -205,8 +204,7 @@ type AuthorRepository interface {
 ```
 
 The project can easily swap the implementation (SQLC or GORM) by creating the appropriate repository instance (`NewSQLCRepository` or `NewGORMRepository`).
-
-#### Performance Benchmarking
+## Performance Benchmarking
 
 The benchmarks measure the time taken to perform operations using SQLC and GORM. This includes single record insertions, updates, deletions, and complex queries such as fetching authors within a date range.
 
@@ -221,7 +219,7 @@ The benchmarks are run using custom logic implemented in the `performBenchmarks`
 
 Each operation is benchmarked for both SQLC and GORM repositories, and the total time is logged, allowing for side-by-side comparison of performance.
 
-#### Running the Benchmarks
+### Running the Benchmarks
 
 You can run the performance benchmarks with the following command:
 
@@ -229,10 +227,7 @@ You can run the performance benchmarks with the following command:
 go run main.go
 ```
 
-This will log the execution times for SQLC and GORM for each operation, allowing you to determine which approach performs better in terms of speed. The results will be logged in a file (e.g., `SqlcVsGorm.log`). 
-
-
-
+This will log the execution times for SQLC and GORM for each operation, allowing you to determine which approach performs better in terms of speed. The results will be logged in a file (e.g., `SqlcVsGorm.log`).
 ### Performance Results
 
 From our tests, we observed the following key points:
