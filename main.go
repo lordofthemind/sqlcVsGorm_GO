@@ -26,6 +26,9 @@ type BenchmarkResult struct {
 // Create a map to keep track of used emails
 var usedEmails = map[string]bool{}
 
+// Create a map to store created author IDs
+var createdAuthorIDs = map[int32]bool{}
+
 // createRandomAuthor generates a random author for testing.
 func createRandomAuthor(rng *rand.Rand) (string, sql.NullString, string, sql.NullTime) {
 	name := fmt.Sprintf("Author%d", rng.Intn(1000))
@@ -50,10 +53,11 @@ func benchmarkCreate(repo repositories.AuthorRepository, repoName string, count 
 	start := time.Now()
 	for i := 0; i < count; i++ {
 		name, bio, email, dateOfBirth := createRandomAuthor(rng)
-		_, err := repo.CreateAuthor(context.Background(), name, bio, email, dateOfBirth)
+		id, err := repo.CreateAuthor(context.Background(), name, bio, email, dateOfBirth)
 		if err != nil {
 			log.Fatalf("[%s] Failed to create author: %v", repoName, err)
 		}
+		createdAuthorIDs[id] = true // Store the created ID
 	}
 	return BenchmarkResult{Repository: repoName, Operation: "CreateAuthor", Duration: time.Since(start)}
 }
@@ -61,8 +65,7 @@ func benchmarkCreate(repo repositories.AuthorRepository, repoName string, count 
 // benchmarkGet runs the GetAuthor benchmark.
 func benchmarkGet(repo repositories.AuthorRepository, repoName string, count int) BenchmarkResult {
 	start := time.Now()
-	for i := 0; i < count; i++ {
-		id := int32(rand.Intn(100)) // Using random int32 ID for testing purposes
+	for id := range createdAuthorIDs { // Use IDs that were created
 		_, err := repo.GetAuthor(context.Background(), id)
 		if err != nil && err != sql.ErrNoRows {
 			log.Fatalf("[%s] Failed to get author: %v", repoName, err)
@@ -84,8 +87,7 @@ func benchmarkList(repo repositories.AuthorRepository, repoName string) Benchmar
 // benchmarkDelete runs the DeleteAuthor benchmark.
 func benchmarkDelete(repo repositories.AuthorRepository, repoName string, count int) BenchmarkResult {
 	start := time.Now()
-	for i := 0; i < count; i++ {
-		id := int32(rand.Intn(100)) // Using random int32 ID for testing purposes
+	for id := range createdAuthorIDs { // Use IDs that were created
 		err := repo.DeleteAuthor(context.Background(), id)
 		if err != nil && err != sql.ErrNoRows {
 			log.Fatalf("[%s] Failed to delete author: %v", repoName, err)
@@ -97,11 +99,10 @@ func benchmarkDelete(repo repositories.AuthorRepository, repoName string, count 
 // benchmarkUpdate runs the UpdateAuthor benchmark.
 func benchmarkUpdate(repo repositories.AuthorRepository, repoName string, count int, rng *rand.Rand) BenchmarkResult {
 	start := time.Now()
-	for i := 0; i < count; i++ {
-		id := int32(rand.Intn(100)) // Using random int32 ID for testing purposes
+	for id := range createdAuthorIDs { // Use IDs that were created
 		name, bio, email, dateOfBirth := createRandomAuthor(rng)
 		err := repo.UpdateAuthor(context.Background(), id, name, bio, email, dateOfBirth)
-		if err != nil && err != sql.ErrNoRows {
+		if err != nil {
 			log.Fatalf("[%s] Failed to update author: %v", repoName, err)
 		}
 	}

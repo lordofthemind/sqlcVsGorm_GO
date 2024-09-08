@@ -1,0 +1,42 @@
+2024/09/08 16:50:00.190300 main.go:140: Running benchmarks for SQLC repository...
+2024/09/08 16:50:02.160363 main.go:149: Running benchmarks for GORM repository...
+2024/09/08 16:50:04.673138 main.go:173: Operation: GetAuthorsByBirthdateRange
+2024/09/08 16:50:04.673353 main.go:174:   SQLC Duration: 4.602697ms
+2024/09/08 16:50:04.673468 main.go:175:   GORM Duration: 5.117724ms
+2024/09/08 16:50:04.673574 main.go:176:   Difference    : 515.027µs
+2024/09/08 16:50:04.673681 main.go:177:   Winner        : SQLC
+2024/09/08 16:50:04.673714 main.go:178: 
+2024/09/08 16:50:04.673814 main.go:173: Operation: CreateAuthor
+2024/09/08 16:50:04.673843 main.go:174:   SQLC Duration: 778.223694ms
+2024/09/08 16:50:04.673866 main.go:175:   GORM Duration: 866.448994ms
+2024/09/08 16:50:04.673895 main.go:176:   Difference    : 88.2253ms
+2024/09/08 16:50:04.673991 main.go:177:   Winner        : SQLC
+2024/09/08 16:50:04.674020 main.go:178: 
+2024/09/08 16:50:04.674115 main.go:173: Operation: GetAuthor
+2024/09/08 16:50:04.674216 main.go:174:   SQLC Duration: 181.078439ms
+2024/09/08 16:50:04.674248 main.go:175:   GORM Duration: 174.336708ms
+2024/09/08 16:50:04.674341 main.go:176:   Difference    : -6.741731ms
+2024/09/08 16:50:04.674373 main.go:177:   Winner        : GORM
+2024/09/08 16:50:04.674467 main.go:178: 
+2024/09/08 16:50:04.674568 main.go:173: Operation: ListAuthors
+2024/09/08 16:50:04.674670 main.go:174:   SQLC Duration: 2.047933ms
+2024/09/08 16:50:04.674774 main.go:175:   GORM Duration: 4.357936ms
+2024/09/08 16:50:04.674864 main.go:176:   Difference    : 2.310003ms
+2024/09/08 16:50:04.674968 main.go:177:   Winner        : SQLC
+2024/09/08 16:50:04.674996 main.go:178: 
+2024/09/08 16:50:04.675018 main.go:173: Operation: DeleteAuthor
+2024/09/08 16:50:04.675112 main.go:174:   SQLC Duration: 700.849283ms
+2024/09/08 16:50:04.675216 main.go:175:   GORM Duration: 833.4381ms
+2024/09/08 16:50:04.675251 main.go:176:   Difference    : 132.588817ms
+2024/09/08 16:50:04.675346 main.go:177:   Winner        : SQLC
+2024/09/08 16:50:04.675374 main.go:178: 
+2024/09/08 16:50:04.675394 main.go:173: Operation: UpdateAuthor
+2024/09/08 16:50:04.675411 main.go:174:   SQLC Duration: 302.98714ms
+2024/09/08 16:50:04.675506 main.go:175:   GORM Duration: 628.864602ms
+2024/09/08 16:50:04.675536 main.go:176:   Difference    : 325.877462ms
+2024/09/08 16:50:04.675635 main.go:177:   Winner        : SQLC
+2024/09/08 16:50:04.675763 main.go:178: 
+2024/09/08 16:50:04.675894 main.go:182: Summary:
+2024/09/08 16:50:04.676032 main.go:183:   Total SQLC Time: 1.969789186s
+2024/09/08 16:50:04.676184 main.go:184:   Total GORM Time: 2.512564064s
+2024/09/08 16:50:04.676330 main.go:186: Overall Winner: SQLC
