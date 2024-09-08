@@ -18,35 +18,28 @@ func NewGormAuthorRepository(db *gorm.DB) *GormAuthorRepository {
 	}
 }
 
-func (r *GormAuthorRepository) CreateAuthor(ctx context.Context, name string, bio string) (int64, error) {
+func (r *GormAuthorRepository) CreateAuthor(ctx context.Context, name string, bio sql.NullString) (int64, error) {
 	author := sqlcgen.Author{
 		Name: name,
-		Bio:  sql.NullString{String: bio, Valid: bio != ""}, // Correctly setting the Bio field as sql.NullString
+		Bio:  bio,
 	}
-
-	if err := r.db.WithContext(ctx).Create(&author).Error; err != nil {
-		return 0, err
+	result := r.db.WithContext(ctx).Create(&author)
+	if result.Error != nil {
+		return 0, result.Error
 	}
-
-	return author.ID, nil
+	return author.ID, nil // Return the inserted ID
 }
 
-func (r *GormAuthorRepository) GetAuthor(ctx context.Context, id int64) (*sqlcgen.Author, error) {
+func (r *GormAuthorRepository) GetAuthor(ctx context.Context, id int64) (sqlcgen.Author, error) {
 	var author sqlcgen.Author
-	if err := r.db.WithContext(ctx).First(&author, id).Error; err != nil {
-		return nil, err
-	}
-
-	return &author, nil
+	err := r.db.WithContext(ctx).First(&author, id).Error
+	return author, err
 }
 
 func (r *GormAuthorRepository) ListAuthors(ctx context.Context) ([]sqlcgen.Author, error) {
 	var authors []sqlcgen.Author
-	if err := r.db.WithContext(ctx).Order("name").Find(&authors).Error; err != nil {
-		return nil, err
-	}
-
-	return authors, nil
+	err := r.db.WithContext(ctx).Find(&authors).Error
+	return authors, err
 }
 
 func (r *GormAuthorRepository) DeleteAuthor(ctx context.Context, id int64) error {

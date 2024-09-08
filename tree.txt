@@ -2,27 +2,32 @@
 ├── Changelog.md
 ├── Makefile
 ├── Readme.md
-├── bin
-├── cmd
 ├── config.yaml
-├── docker
-├── docs
 ├── go.mod
+├── go.sum
 ├── internals
-│   ├── configs
-│   ├── handlers
-│   ├── initializers
-│   ├── middlewares
 │   ├── repositories
-│   ├── routes
-│   ├── sqlc
-│   ├── tokens
-│   └── utils
+│   │   ├── AuthorRepositoryInterface.go
+│   │   ├── GormAuthorRepository.go
+│   │   └── SqlcAuthorRepository.go
+│   └── sqlc
+│       ├── migrations
+│       │   ├── 20240908120008_create_authors_table.down.sql
+│       │   └── 20240908120008_create_authors_table.up.sql
+│       ├── queries
+│       │   └── authors.sql
+│       ├── schema
+│       │   └── schema.sql
+│       └── sqlcgen
+│           ├── authors.sql.go
+│           ├── db.go
+│           └── models.go
 ├── logs
 ├── main.go
 ├── pkgs
 ├── scripts
+├── sqlc.yaml
 ├── ssl
 └── tree.txt
 
-19 directories, 7 files
+12 directories, 19 files

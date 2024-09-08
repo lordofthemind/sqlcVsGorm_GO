@@ -17,28 +17,20 @@ func NewSqlcAuthorRepository(db *sql.DB) *SqlcAuthorRepository {
 	}
 }
 
-func (r *SqlcAuthorRepository) CreateAuthor(ctx context.Context, name string, bio string) (int64, error) {
+func (r *SqlcAuthorRepository) CreateAuthor(ctx context.Context, name string, bio sql.NullString) (int64, error) {
 	params := sqlcgen.CreateAuthorParams{
 		Name: name,
-		Bio:  sql.NullString{String: bio, Valid: bio != ""},
+		Bio:  bio,
 	}
-
-	var id int64
-	_, err := r.queries.CreateAuthor(ctx, params)
+	result, err := r.queries.CreateAuthor(ctx, params)
 	if err != nil {
 		return 0, err
 	}
-
-	return id, nil
+	return result.LastInsertId() // Return the inserted ID
 }
 
-func (r *SqlcAuthorRepository) GetAuthor(ctx context.Context, id int64) (*sqlcgen.Author, error) {
-	author, err := r.queries.GetAuthor(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-
-	return &author, nil
+func (r *SqlcAuthorRepository) GetAuthor(ctx context.Context, id int64) (sqlcgen.Author, error) {
+	return r.queries.GetAuthor(ctx, id)
 }
 
 func (r *SqlcAuthorRepository) ListAuthors(ctx context.Context) ([]sqlcgen.Author, error) {
