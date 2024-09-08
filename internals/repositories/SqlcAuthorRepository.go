@@ -23,14 +23,8 @@ func (r *SqlcAuthorRepository) CreateAuthor(ctx context.Context, name string, bi
 		Bio:  sql.NullString{String: bio, Valid: bio != ""},
 	}
 
-	// Execute the query to insert the author
-	result, err := r.queries.CreateAuthor(ctx, params)
-	if err != nil {
-		return 0, err
-	}
-
-	// Extract the last inserted ID from the result
-	id, err := result.LastInsertId()
+	var id int64
+	_, err := r.queries.CreateAuthor(ctx, params)
 	if err != nil {
 		return 0, err
 	}

@@ -10,6 +10,11 @@ SQLC_PG_INTERNAL_PORT ?= 5432
 # Environment variables for GORM database
 GORM_PG_DB_NAME ?= SqlcVsGorm_GORM
 
+
+MIGRATE_CMD ?= migrate
+MIGRATE_PATH ?= internals/sqlc/migrations
+MIGRATE_URL ?= postgresql://$(SQLC_PG_DB_USERNAME):$(SQLC_PG_DB_PASSWORD)@localhost:$(SQLC_PG_PORT)/$(SQLC_PG_DB_NAME)?sslmode=disable
+
 # Colors for help command
 CYAN := \033[36m
 RESET := \033[0m
@@ -49,9 +54,22 @@ drppgdb_gorm: strpg ## Drop PostgreSQL database for GORM
 	@echo "Dropping PostgreSQL database for GORM..."
 	docker exec -it $(SQLC_PG_CONTAINER_NAME) dropdb -U $(SQLC_PG_DB_USERNAME) $(GORM_PG_DB_NAME)
 
+# Database migration commands
+migrate-up: ## Apply all migrations
+	@echo "Applying all migrations..."
+	$(MIGRATE_CMD) -path $(MIGRATE_PATH) -database $(MIGRATE_URL) up
+
+migrate-down: ## Roll back the last migration
+	@echo "Rolling back the last migration..."
+	$(MIGRATE_CMD) -path $(MIGRATE_PATH) -database $(MIGRATE_URL) down
+
+migrate-create: ## Create a new migration file
+	@echo "Creating a new migration file..."
+	$(MIGRATE_CMD) create -ext sql -dir $(MIGRATE_PATH) $(name)
+
 # Help command
 help: ## Show this help message
 	@echo "Available commands:"
-	@awk 'BEGIN {FS = ":.*##"; printf "\n\033[1m%-20s\033[0m %s\n\n", "Command", "Description"} /^[a-zA-Z_-]+:.*?##/ { printf "\033[36m%-20s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"; printf "\n\033[1m%-12s\033[0m %s\n\n", "Command", "Description"} /^[a-zA-Z_-]+:.*?##/ { printf "\033[36m%-12s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 
-.PHONY: crtpg strpg stppg rmvpg crtpgdb_sqlc drppgdb_sqlc crtpgdb_gorm drppgdb_gorm help
+.PHONY: crtpg strpg stppg rmvpg crtpgdb_sqlc drppgdb_sqlc crtpgdb_gorm drppgdb_gorm migrate-up migrate-down migrate-create help
