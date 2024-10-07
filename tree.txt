@@ -2,7 +2,6 @@
 ├── Changelog.md
 ├── Makefile
 ├── Readme.md
-├── Result.txt
 ├── go.mod
 ├── go.sum
 ├── internals
@@ -10,27 +9,39 @@
 │   │   ├── AuthorRepositoryInterface.go
 │   │   ├── GormAuthorRepository.go
 │   │   └── SqlcAuthorRepository.go
-│   └── sqlc
-│       ├── migrations
-│       │   ├── 20240908133254_authors_table.down.sql
-│       │   └── 20240908133254_authors_table.up.sql
-│       ├── queries
-│       │   └── authors.sql
-│       ├── schema
-│       │   └── schema.sql
-│       └── sqlcgen
-│           ├── authors.sql.go
-│           ├── db.go
-│           ├── models.go
-│           └── querier.go
+│   ├── sqlc
+│   │   ├── migrations
+│   │   │   ├── 20240908133254_authors_table.down.sql
+│   │   │   └── 20240908133254_authors_table.up.sql
+│   │   ├── queries
+│   │   │   └── authors.sql
+│   │   ├── schema
+│   │   │   └── schema.sql
+│   │   └── sqlcgen
+│   │       ├── authors.sql.go
+│   │       ├── db.go
+│   │       ├── models.go
+│   │       └── querier.go
+│   ├── types
+│   └── utils
 ├── logs
 │   ├── 20240908_165429_SqlcVsGorm.log
 │   ├── 20240908_165439_SqlcVsGorm.log
-│   └── 20240908_165450_SqlcVsGorm.log
+│   ├── 20240908_165450_SqlcVsGorm.log
+│   ├── 20240909_085408_SqlcVsGormVsMongoDB.log
+│   ├── 20240909_085428_SqlcVsGormVsMongoDB.log
+│   ├── 20240909_085543_SqlcVsGormVsMongoDB.log
+│   ├── 20240909_091015_SqlcVsGorm.log
+│   ├── 20240912_173153_SqlcVsGorm.log
+│   ├── 20240912_173211_SqlcVsGorm.log
+│   ├── 20240912_173319_SqlcVsGorm.log
+│   ├── 20240912_173338_SqlcVsGorm.log
+│   ├── 20240912_173343_SqlcVsGorm.log
+│   └── 20240912_173350_SqlcVsGorm.log
 ├── main.go
 ├── pkgs
 │   └── Logger.go
 ├── sqlc.yaml
 └── tree.txt
 
-10 directories, 24 files
+12 directories, 33 files
